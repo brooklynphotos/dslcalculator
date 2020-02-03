@@ -11,7 +11,7 @@ import java.util.Objects;
 public class Calculation {
     public Calculation(){
     }
-    public Calculation(final int value, final float[] display) {
+    public Calculation(final float value, final float[] display) {
         this.value = value;
         this.display = display;
     }
@@ -44,30 +44,33 @@ public class Calculation {
 
     private float[] display = new float[]{};
 
-    public void performOperation(final Instruction instruction) {
+    public Calculation performOperation(final Instruction instruction) {
         switch (instruction.getOperation()) {
             case ADD:
-                this.value += instruction.getOperand().get();
-                break;
+                return Calculation.withNewValue(this, this.value + (float)instruction.getOperand().get());
             case SUBTRACT:
-                this.value -= instruction.getOperand().get();
-                break;
+                return Calculation.withNewValue(this, this.value - instruction.getOperand().get());
             case DIVIDE:
                 if (instruction.getOperand().get() == 0) {
                     throw new IllegalArgumentException("Can't divide by zero in line " + instruction.getIndex());
                 }
-                this.value /= instruction.getOperand().get();
-                break;
+                return Calculation.withNewValue(this, this.value / instruction.getOperand().get());
             case MULTIPLY:
-                this.value *= instruction.getOperand().get();
-                break;
+                return Calculation.withNewValue(this, this.value * instruction.getOperand().get());
             case DISPLAY:
-                final float[] newDisplay = new float[this.display.length + 1];
-                System.arraycopy(this.display, 0, newDisplay, 0, this.display.length);
-                newDisplay[newDisplay.length - 1] = this.value;
-                this.display = newDisplay;
-                break;
-
+                return Calculation.withAdditionalDisplay(this);
         }
+        throw new IllegalArgumentException("We failed to handle a legitimate operation: " + instruction.getOperation());
+    }
+
+    private static Calculation withAdditionalDisplay(final Calculation calculation) {
+        final float[] newDisplay = new float[calculation.display.length + 1];
+        System.arraycopy(calculation.display, 0, newDisplay, 0, calculation.display.length);
+        newDisplay[newDisplay.length - 1] = calculation.value;
+        return new Calculation(calculation.value, newDisplay);
+    }
+
+    private static Calculation withNewValue(final Calculation calculation, final float v) {
+        return new Calculation(v, calculation.display);
     }
 }
